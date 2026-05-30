@@ -1,6 +1,8 @@
 #include "../inc/display.h"
 
 
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 SDL_Texture* color_buffer_texture = NULL;
@@ -16,6 +18,7 @@ bool initialize_window()
         return false;
     }
 
+    //SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
     SDL_DisplayMode display_mode;
     SDL_GetCurrentDisplayMode(0, &display_mode);
     window_width = display_mode.w;
@@ -87,7 +90,7 @@ void draw_line(int x0, int y0, int x1, int y1, uint32_t color)
     int delta_x = (x1 - x0);
     int delta_y = (y1 - y0);
 
-    int side_length = (abs(delta_x) >= abs(delta_y)) ? delta_x : delta_y;
+    int side_length = MAX(abs(delta_x), abs(delta_y));
     float x_inc = (float)delta_x/side_length;
     float y_inc = (float)delta_y/side_length;
 

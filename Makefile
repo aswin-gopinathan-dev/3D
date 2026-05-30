@@ -1,6 +1,6 @@
 
 build:
-	gcc -Wall -std=c99 ./src/*.c -lSDL2 -lm -o app
+	gcc -O3 -Wall -std=c99 ./src/*.c -lSDL2 -lm -o app
 
 run:
 	./app
