@@ -6,6 +6,23 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+enum cull_method 
+{
+    CULL_NONE,
+    CULL_BACKFACE
+};
+
+enum render_method
+{
+    RENDER_WIRE,
+    RENDER_WIRE_VERTEX,
+    RENDER_FILL_TRIANGLE,
+    RENDER_FILL_TRIANGLE_WIRE
+};
+
+extern enum cull_method cull_method;
+extern enum render_method render_method;
+
 extern SDL_Window* window;
 extern SDL_Renderer* renderer;
 extern SDL_Texture* color_buffer_texture;
