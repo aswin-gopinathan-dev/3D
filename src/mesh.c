@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-mesh_t mesh = {NULL, NULL, {0,0,0}};
+mesh_t mesh = {NULL, NULL, {0,0,0}, {1.0,1.0,1.0}, {0,0,0}};
 
 vec3_t cube_vertices[N_CUBE_VERTICES] = {
     {-1, -1, -1},   // 1
