@@ -15,7 +15,7 @@
 #include "../inc/mesh.h"
 #include "../inc/array.h"
 #include "../inc/matrix.h"
-
+#include "../inc/light.h"
  
  
 bool is_running;
@@ -38,8 +38,8 @@ void setup()
     float zfar = 100.0;
     proj_matrix = mat4_make_perspective(fov, aspect, znear, zfar);
 
-    load_cube_mesh_data();
-    //load_obj_file_data("./assets/cube.obj");//f22.obj");
+    //load_cube_mesh_data();
+    load_obj_file_data("./assets/f22.obj");
 }
  
 
@@ -91,29 +91,29 @@ void update()
         }
 
         // Check backface culling
+        vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
+        vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]);
+        vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]);
+
+        // Get the two vectors that forms the sides of the face
+        vec3_t vector_ab = vec3_sub(vector_b, vector_a);
+        vec3_t vector_ac = vec3_sub(vector_c, vector_a);
+
+        // Compute face normal
+        vec3_t normal = vec3_cross(vector_ab, vector_ac);
+
+        // Normalize face normal vector
+        vec3_normalize(&normal);
+
+        // Find the camera ray 
+        vec3_t camera_ray = vec3_sub(camera_position, vector_a);
+        vec3_normalize(&camera_ray);
+
+        // Calculate how aligned camera ray is with the face normal
+        float dot_normal_camera = vec3_dot(camera_ray, normal);
+
         if(cull_method == CULL_BACKFACE)
         {
-            vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]);
-            vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]);
-            vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]);
-
-            // Get the two vectors that forms the sides of the face
-            vec3_t vector_ab = vec3_sub(vector_b, vector_a);
-            vec3_t vector_ac = vec3_sub(vector_c, vector_a);
-
-            // Compute face normal
-            vec3_t normal = vec3_cross(vector_ab, vector_ac);
-
-            // Normalize face normal vector
-            vec3_normalize(&normal);
-
-            // Find the camera ray 
-            vec3_t camera_ray = vec3_sub(camera_position, vector_a);
-            vec3_normalize(&camera_ray);
-
-            // Calculate how aligned camera ray is with the face normal
-            float dot_normal_camera = vec3_dot(camera_ray, normal);
-
             // Bypass triangles that are facing away from camera
             if(dot_normal_camera < 0)
                 continue;
@@ -129,6 +129,10 @@ void update()
             projected_points[j].x *= (window_width/2);
             projected_points[j].y *= (window_height/2);
 
+            // Invert y values to account for flipped screen y coordinate. In obj files, y value 
+            // increase upwards whereas on screen its downwards
+            projected_points[j].y *= -1;
+
             // Translate the projected points to the middle of the screen
             projected_points[j].x += window_width/2;
             projected_points[j].y += window_height/2;
@@ -137,12 +141,14 @@ void update()
 
         // Calculate average depth for each face based on the vertices after the transformation
         float avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z)/3;
-
+        float light_intensity_factor = -vec3_dot(normal, light.direction);
+        uint32_t triangle_color = light_apply_intensity(face.color, light_intensity_factor);
+        
         triangle_t projected_triangle = { 
                                          {{projected_points[0].x, projected_points[0].y },
                                          {projected_points[1].x, projected_points[1].y },
                                          {projected_points[2].x, projected_points[2].y }},
-                                         face.color,
+                                         triangle_color,
                                          avg_depth
         };
         array_push(triangles_to_render, projected_triangle);
