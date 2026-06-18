@@ -80,6 +80,12 @@ void vec2_normalize(vec2_t* normal)
     normal->y = normal->y / mag;
 }
 
+vec2_t vec2_from_vec4(vec4_t v)
+{
+    vec2_t result = { v.x, v.y};
+    return result;
+}
+
 vec3_t vec3_add(vec3_t a, vec3_t b)
 {
     vec3_t result = { a.x + b.x, a.y + b.y, a.z + b.z };

@@ -33,6 +33,8 @@ vec2_t vec2_mul(vec2_t v, float factor);
 vec2_t vec2_div(vec2_t v, float factor);
 float vec2_dot(vec3_t a, vec3_t b);
 void vec2_normalize(vec2_t* normal);
+vec2_t vec2_from_vec4(vec4_t v);
+
 
 float vec3_length(vec3_t v);
 vec3_t vec3_add(vec3_t a, vec3_t b);
