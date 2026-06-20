@@ -18,6 +18,7 @@
 #include "../inc/light.h"
 #include "../inc/triangle.h"
 #include "../inc/texture.h"
+#include "../inc/upng.h"
  
  
 bool is_running;
@@ -32,7 +33,7 @@ void setup()
     cull_method = CULL_BACKFACE;
 
     color_buffer = (uint32_t*)malloc(sizeof(uint32_t)*window_width*window_height);
-    color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
+    color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
 
     float fov = 60 * 3.14 / 180;
     float aspect = (float)window_height / (float)window_width;
@@ -40,11 +41,14 @@ void setup()
     float zfar = 100.0;
     proj_matrix = mat4_make_perspective(fov, aspect, znear, zfar);
 
+/*    
     mesh_texture = (uint32_t*)REDBRICK_TEXTURE;
     texture_width = 64;
     texture_height = 64;
+*/
 
     load_cube_mesh_data();
+    load_png_texture_data("./assets/cube.png");
     //load_obj_file_data("./assets/f22.obj");
 }
  
@@ -274,6 +278,7 @@ void process_input()
 void free_resources()
 {
     free(color_buffer);
+    upng_free(png_texture);
     array_free(mesh.faces);
     array_free(mesh.vertices);
 }
