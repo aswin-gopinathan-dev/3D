@@ -133,10 +133,9 @@ void draw_texel(int x, int y, uint32_t* texture,
     interpolated_u /= interpolated_reciprocal_w;
     interpolated_v /= interpolated_reciprocal_w;
 
-    int tex_x = abs((int)(interpolated_u * texture_width));
-    int tex_y = abs((int)(interpolated_v * texture_height));
-    if( tex_x < texture_width && tex_y < texture_height)
-        draw_pixel(x, y, texture[tex_y * texture_width + tex_x]);
+    int tex_x = abs((int)(interpolated_u * texture_width)) % texture_width;
+    int tex_y = abs((int)(interpolated_v * texture_height)) % texture_height;
+    draw_pixel(x, y, texture[tex_y * texture_width + tex_x]);
 }
 
 
@@ -172,6 +171,11 @@ void draw_textured_triangle(int x0, int y0, float z0, float w0, float u0, float 
         swap_f(&u0, &u1);
         swap_f(&v0, &v1);
     }
+
+    // Flip v component to account for inverted uv coordinates
+    v0 = 1 - v0;
+    v1 = 1 - v1;
+    v2 = 1 - v2;
 
     vec4_t point_a = { x0, y0, z0, w0 };
     vec4_t point_b = { x1, y1, z1, w1 };

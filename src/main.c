@@ -7,8 +7,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
-#define __USE_MISC
-#include <math.h>
 #include <SDL2/SDL.h>
 #include "../inc/display.h"
 #include "../inc/vector.h"
@@ -47,18 +45,18 @@ void setup()
     texture_height = 64;
 */
 
-    load_cube_mesh_data();
-    load_png_texture_data("./assets/cube.png");
-    //load_obj_file_data("./assets/f22.obj");
+    //load_cube_mesh_data();
+    load_png_texture_data("./assets/crab.png");
+    load_obj_file_data("./assets/crab.obj");
 }
  
 
 void update()
 {
     // Increment rotation angle
-    mesh.rotation.y += 0.001;
-    mesh.rotation.z += 0.001;
-    mesh.rotation.x += 0.001;
+    mesh.rotation.y += 0.008;
+    //mesh.rotation.z += 0.001;
+    //mesh.rotation.x += 0.001;
     //mesh.scale.x += 0.002;
     //mesh.translation.x += 0.01;
     mesh.translation.z = 5.0;
@@ -77,9 +75,9 @@ void update()
     {
         face_t face = mesh.faces[i];
         vec3_t face_vertices[3];
-        face_vertices[0] = mesh.vertices[face.a-1];
-        face_vertices[1] = mesh.vertices[face.b-1];
-        face_vertices[2] = mesh.vertices[face.c-1];
+        face_vertices[0] = mesh.vertices[face.a];
+        face_vertices[1] = mesh.vertices[face.b];
+        face_vertices[2] = mesh.vertices[face.c];
 
         // For each vertex that forms the face, apply transformation - rotation, translate along z (to place it at a visible distance from camera). 
         // Project the transformed vertex into 2D.
