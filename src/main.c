@@ -21,7 +21,10 @@
  
 bool is_running;
 vec3_t camera_position = {0, 0, 0};
-triangle_t* triangles_to_render = NULL;
+#define MAX_TRIANGLES_PER_MESH 10000
+triangle_t triangles_to_render[10000];
+int num_triangles_to_render = 0;
+
 mat4_t proj_matrix;
 
 // Initialize color buffer, color buffer texture and load obj file
@@ -32,6 +35,7 @@ void setup()
 
     color_buffer = (uint32_t*)malloc(sizeof(uint32_t)*window_width*window_height);
     color_buffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, window_width, window_height);
+    z_buffer = (float*)malloc(sizeof(float)*window_width*window_height);
 
     float fov = 60 * 3.14 / 180;
     float aspect = (float)window_height / (float)window_width;
@@ -67,7 +71,7 @@ void update()
     mat4_t rotation_matrix_y = mat4_make_rotation_y(mesh.rotation.y);
     mat4_t rotation_matrix_z = mat4_make_rotation_z(mesh.rotation.z);
 
-    triangles_to_render = NULL;
+    num_triangles_to_render = 0;
 
     // Get the list of faces. A face is a collection of 3 vertices that forms a triangle in 3D space
     int num_faces = array_length(mesh.faces);
@@ -148,7 +152,6 @@ void update()
         }
 
         // Calculate average depth for each face based on the vertices after the transformation
-        float avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z)/3;
         float light_intensity_factor = -vec3_dot(normal, light.direction);
         uint32_t triangle_color = light_apply_intensity(face.color, light_intensity_factor);
         
@@ -162,24 +165,10 @@ void update()
                                              {face.c_uv.u, face.c_uv.v},
                                          },
                                          .color = triangle_color,
-                                         .avg_depth = avg_depth
         };
-        array_push(triangles_to_render, projected_triangle);
-    }
 
-    // Sort triangles to render by their average depth
-    int num_triangles = array_length(triangles_to_render);
-    for(int i=0;i<num_triangles;i++)
-    {
-        for(int j=i;j<num_triangles;j++)
-        {
-            if(triangles_to_render[i].avg_depth < triangles_to_render[j].avg_depth)
-            {
-                triangle_t temp = triangles_to_render[i];
-                triangles_to_render[i] = triangles_to_render[j];
-                triangles_to_render[j] = temp;
-            }
-        }
+        if(num_triangles_to_render < MAX_TRIANGLES_PER_MESH)
+            triangles_to_render[num_triangles_to_render++] = projected_triangle;
     }
 }
 
@@ -188,16 +177,15 @@ void render()
     draw_grid();
     
     // Iterate the array of projected triangle and draw it on the color buffer
-    int num_triangles = array_length(triangles_to_render);
-    for(int i=0;i<num_triangles;i++)
+    for(int i=0;i<num_triangles_to_render;i++)
     {
         triangle_t triangle = triangles_to_render[i];
 
         if(render_method == RENDER_FILL_TRIANGLE || render_method == RENDER_FILL_TRIANGLE_WIRE)
         {
-            draw_filled_triangle(triangle.points[0].x, triangle.points[0].y,
-                      triangle.points[1].x, triangle.points[1].y,
-                      triangle.points[2].x, triangle.points[2].y,
+            draw_filled_triangle(triangle.points[0].x, triangle.points[0].y, triangle.points[0].z, triangle.points[0].w, 
+                      triangle.points[1].x, triangle.points[1].y, triangle.points[1].z, triangle.points[1].w, 
+                      triangle.points[2].x, triangle.points[2].y, triangle.points[2].z, triangle.points[2].w, 
                       triangle.color);
         }
 
@@ -226,12 +214,10 @@ void render()
         }
     } 
 
-
-
-    array_free(triangles_to_render);
     // Render the color buffer
     render_color_buffer();
     clear_color_buffer(0xFF000000);
+    clear_z_buffer();
 
     SDL_RenderPresent(renderer);
 }
@@ -276,6 +262,7 @@ void process_input()
 void free_resources()
 {
     free(color_buffer);
+    free(z_buffer);
     upng_free(png_texture);
     array_free(mesh.faces);
     array_free(mesh.vertices);
