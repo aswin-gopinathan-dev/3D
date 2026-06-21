@@ -16,16 +16,17 @@
 #include "../inc/light.h"
 #include "../inc/triangle.h"
 #include "../inc/texture.h"
+#include "../inc/camera.h"
 #include "../inc/upng.h"
  
  
 bool is_running;
-vec3_t camera_position = {0, 0, 0};
 #define MAX_TRIANGLES_PER_MESH 10000
 triangle_t triangles_to_render[10000];
 int num_triangles_to_render = 0;
 
 mat4_t proj_matrix;
+mat4_t view_matrix;
 
 // Initialize color buffer, color buffer texture and load obj file
 void setup()
@@ -58,7 +59,7 @@ void setup()
 void update()
 {
     // Increment rotation angle
-    mesh.rotation.y += 0.008;
+    //mesh.rotation.y += 0.008;
     //mesh.rotation.z += 0.001;
     //mesh.rotation.x += 0.001;
     //mesh.scale.x += 0.002;
@@ -70,6 +71,17 @@ void update()
     mat4_t rotation_matrix_x = mat4_make_rotation_x(mesh.rotation.x);
     mat4_t rotation_matrix_y = mat4_make_rotation_y(mesh.rotation.y);
     mat4_t rotation_matrix_z = mat4_make_rotation_z(mesh.rotation.z);
+
+    // Create the view matrix
+    vec3_t target = { 0, 0, 1 };
+    mat4_t camera_yaw_rotation = mat4_make_rotation_y(camera.yaw);
+    camera.direction = vec3_from_vec4(mat4_mul_vec4(camera_yaw_rotation, vec4_from_vec3(target)));
+
+    // Offset camera position in the direction where the camera is pointing at
+    target = vec3_add(camera.position, camera.direction);
+    vec3_t up_direction = { 0, 1, 0 };
+
+    view_matrix = mat4_look_at(camera.position, target, up_direction);
 
     num_triangles_to_render = 0;
 
@@ -99,6 +111,9 @@ void update()
             world_matrix = mat4_mul_mat4(translation_matrix, world_matrix);
 
             transformed_vertex = mat4_mul_vec4(world_matrix, transformed_vertex);
+
+            transformed_vertex = mat4_mul_vec4(view_matrix, transformed_vertex);
+
             transformed_vertices[j] = transformed_vertex;
         }
 
@@ -118,7 +133,8 @@ void update()
         vec3_normalize(&normal);
 
         // Find the camera ray 
-        vec3_t camera_ray = vec3_sub(camera_position, vector_a);
+        vec3_t origin = {0, 0, 0};
+        vec3_t camera_ray = vec3_sub(origin, vector_a);
         vec3_normalize(&camera_ray);
 
         // Calculate how aligned camera ray is with the face normal
@@ -253,8 +269,27 @@ void process_input()
             
             if(event.key.keysym.sym == SDLK_c)
                 cull_method = CULL_BACKFACE;
-            if(event.key.keysym.sym == SDLK_d)
+            if(event.key.keysym.sym == SDLK_x)
                 cull_method = CULL_NONE;
+
+            if(event.key.keysym.sym == SDLK_UP)
+                camera.position.y += 0.01;
+            if(event.key.keysym.sym == SDLK_DOWN)
+                camera.position.y -= 0.01;
+            if(event.key.keysym.sym == SDLK_a)
+                camera.yaw += 0.01;
+            if(event.key.keysym.sym == SDLK_d)
+                camera.yaw -= 0.01;
+            if(event.key.keysym.sym == SDLK_w)
+            {
+                camera.forward_velocity = vec3_mul(camera.direction, 0.05);
+                camera.position = vec3_add(camera.position, camera.forward_velocity);
+            }
+            if(event.key.keysym.sym == SDLK_s)
+            {
+                camera.forward_velocity = vec3_mul(camera.direction, 0.05);
+                camera.position = vec3_sub(camera.position, camera.forward_velocity);
+            }
             break;
     }
 }
