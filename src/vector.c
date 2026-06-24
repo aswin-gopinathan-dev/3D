@@ -1,6 +1,19 @@
 #include "../inc/vector.h"
 #include <math.h>
 
+
+vec3_t vec3_new(float x, float y, float z)
+{
+    vec3_t result = { x, y, z };
+    return result;
+}
+
+vec3_t vec3_clone(vec3_t* v)
+{
+    vec3_t result = { v->x, v->y, v->z };
+    return result;
+}
+
 vec3_t vec3_rotate_x(vec3_t v, float angle)
 {
     vec3_t rotated_vector = {
@@ -32,6 +45,13 @@ vec3_t vec3_rotate_z(vec3_t v, float angle)
     };
 
     return rotated_vector;
+}
+
+
+vec2_t vec2_new(float x, float y)
+{
+    vec2_t result = { x, y };
+    return result;
 }
 
 float vec2_length(vec2_t v)
